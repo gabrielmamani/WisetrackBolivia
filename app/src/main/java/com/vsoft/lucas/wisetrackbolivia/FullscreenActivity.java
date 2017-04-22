@@ -1,6 +1,7 @@
 package com.vsoft.lucas.wisetrackbolivia;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -79,8 +80,10 @@ public class FullscreenActivity extends AppCompatActivity {
         public boolean onTouch(View view, MotionEvent motionEvent) {
             if (AUTO_HIDE) {
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                Toast toast = Toast.makeText(getApplicationContext(),"Bienvenido", Toast.LENGTH_SHORT);
-                toast.show();
+                //Toast toast = Toast.makeText(getApplicationContext(),"Bienvenido", Toast.LENGTH_SHORT);
+                //toast.show();
+                Intent intent = new Intent(getApplicationContext(), MapsSeguimiento.class);
+                startActivity(intent);
             }
             return false;
         }

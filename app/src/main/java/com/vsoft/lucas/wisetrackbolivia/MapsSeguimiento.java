@@ -97,7 +97,7 @@ public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallb
 
         // Add a marker in Sydney and move the camera
 
-
+//hola
     }
 
     private void showProgressDialog() {

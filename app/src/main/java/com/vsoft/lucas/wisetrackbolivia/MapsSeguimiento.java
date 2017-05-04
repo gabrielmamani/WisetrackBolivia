@@ -3,10 +3,18 @@ package com.vsoft.lucas.wisetrackbolivia;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -14,6 +22,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -30,16 +39,30 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+public class MapsSeguimiento extends FragmentActivity implements
+        GoogleMap.OnMarkerClickListener,
+        OnMapReadyCallback,
+        GoogleMap.OnInfoWindowClickListener,
+        GoogleMap.OnInfoWindowLongClickListener,
+        GoogleMap.OnInfoWindowCloseListener {
 
     private GoogleMap mMap;
     private String TAG = MapsSeguimiento.class.getSimpleName();
     public String jsonResponse;
+    private Marker mSelectedMarker;
+
+    private static int[] resource_image = {R.mipmap.auto_verde_este,
+            R.mipmap.auto_verde_noreste,
+            R.mipmap.auto_verde_noroeste,
+            R.mipmap.auto_verde_norte,
+            R.mipmap.auto_verde_oeste,
+            R.mipmap.auto_verde_sur,
+            R.mipmap.auto_verde_sureste,
+            R.mipmap.auto_verde_suroeste};
 
     private String tag_json_arry = "jarray_req";
     private ProgressDialog pDialog;
@@ -52,7 +75,6 @@ public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallb
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
 
     }
 
@@ -70,7 +92,23 @@ public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallb
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+
         Pintar();
+
+        mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
+
+        mMap.setOnMarkerClickListener(this);
+        mMap.setOnInfoWindowClickListener(this);
+        mMap.setOnInfoWindowCloseListener(this);
+        mMap.setOnInfoWindowCloseListener(this);
+
+/*      LatLng latLng = new LatLng(-17.767066, -63.116432);
+        CameraUpdate cameraUpdateFactory = CameraUpdateFactory.newLatLngZoom(latLng, 20);
+        mMap.moveCamera(cameraUpdateFactory);
+*/
+
+
         //mMap.setMyLocationEnabled(true);
         //mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
@@ -100,6 +138,7 @@ public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallb
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        mSelectedMarker = marker;
         return false;
     }
 
@@ -149,35 +188,29 @@ public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallb
                                                 String direcciones = trama.getString("direcciones");
                                                 String tipov = trama.getString("tipov");
 
-/*
-                                jsonResponse += "asimut: " + asimut + "\n";
-                                jsonResponse += "EstadoGPS: " + EstadoGPS + "\n";
-                                jsonResponse += "EstadoMotor: " + EstadoMotor + "\n";
-                                jsonResponse += "EstadoPuerta: " + EstadoPuerta + "\n";
-                                jsonResponse += "FechaGPS: " + FechaGPS + "\n";
-                                jsonResponse += "ID: " + ID + "\n";
-                                jsonResponse += "IDButton: " + IDButton + "\n";
-                                jsonResponse += "IMEI: " + IMEI + "\n";
-                                jsonResponse += "Kilometraje: " + Kilometraje + "\n";
-                                jsonResponse += "Latitud: " + Latitud + "\n";
-                                jsonResponse += "Longitud: " + Longitud + "\n";
-                                jsonResponse += "NIT: " + NIT + "\n";
-                                jsonResponse += "Nombre: " + Nombre + "\n";
-                                jsonResponse += "Nro: " + Nro + "\n";
-                                jsonResponse += "NroPlaca: " + NroPlaca + "\n";
-                                jsonResponse += "Temperatura: " + Temperatura + "\n";
-                                jsonResponse += "Velocidad: " + Velocidad + "\n";
-                                jsonResponse += "VoltajeBateria: " + VoltajeBateria + "\n";
-                                jsonResponse += "direcciones: " + direcciones + "\n";
-                                jsonResponse += "tipov: " + tipov + "\n\n\n";
-*/
+                                                String resultado = "FechaGPS: " + FechaGPS;
+                                                float rasimut = Float.parseFloat(asimut);
+                                                int nro = ObtenerEstadoMovil(rasimut);
 
-                                                mMap.addMarker(new MarkerOptions()
-                                                        .position(new LatLng(trama.getDouble("Latitud"), trama.getDouble("Longitud")))
-                                                        .title("Placa: " + NroPlaca)
-                                                        .snippet("Fecha: " + FechaGPS)
-                                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.auto_verde_este)));
+                                                if (NroPlaca.equals("4217-UBN")) {
+                                                    mMap.addMarker(new MarkerOptions()
+                                                            .position(new LatLng(trama.getDouble("Latitud"), trama.getDouble("Longitud")))
+                                                            .title("Placa: " + NroPlaca)
+                                                            .snippet(resultado)
+                                                            .icon(BitmapDescriptorFactory.fromResource(nro)));
 
+                                                    mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(trama.getDouble("Latitud"), trama.getDouble("Longitud"))));
+
+                                                } else {
+                                                    mMap.addMarker(new MarkerOptions()
+                                                            .position(new LatLng(trama.getDouble("Latitud"), trama.getDouble("Longitud")))
+                                                            .title("Placa: " + NroPlaca)
+                                                            .snippet(resultado)
+                                                            .icon(BitmapDescriptorFactory.fromResource(nro)));
+                                                }
+
+
+                                                //mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(trama.getDouble("Latitud"), trama.getDouble("Longitud"))));
 
                                             }
 
@@ -207,25 +240,122 @@ public class MapsSeguimiento extends FragmentActivity implements OnMapReadyCallb
                     }
                 });
             }
-        }, 0, 20000);
+        }, 0, 9000);
     }
 
+    public int ObtenerEstadoMovil(float result) {
+        int valor = 0;
+        if (result >= 338) {
+            valor = resource_image[3]; //norte
+        }
+        if(result <= 23){
+            valor = resource_image[3]; //norte
+        }
+        if(result > 23 && result < 68){
+            valor = resource_image[1]; //noreste
+        }
+        if(result >= 68 && result < 113){
+            valor = resource_image[0]; //este
+        }
+        if(result >= 113 && result < 158){
+            valor = resource_image[6]; //sureste
+        }
+        if(result >= 158 && result < 203){
+            valor = resource_image[5]; //sur
+        }
+        if(result >= 203 && result < 248){
+            valor = resource_image[7]; //suroeste
+        }
+        if(result >= 248 && result < 293){
+            valor = resource_image[4]; //oeste
+        }
+        if(result >= 293 && result < 338){
+            valor = resource_image[2]; //noroeste
+        }
+        return valor;
+    }
 
-    private void makeJsonArryReq() {
-        //showProgressDialog();
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Toast.makeText(this, "Click Info Window", Toast.LENGTH_SHORT).show();
+    }
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+    @Override
+    public void onInfoWindowLongClick(Marker marker) {
+        Toast.makeText(this, "Info Window long click", Toast.LENGTH_SHORT).show();
+    }
 
-                    }
-                });
+    @Override
+    public void onInfoWindowClose(Marker marker) {
+        //Toast.makeText(this, "Close Info Window", Toast.LENGTH_SHORT).show();
+    }
+
+    class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
+        // These are both viewgroups containing an ImageView with id "badge" and two TextViews with id
+        // "title" and "snippet".
+        private final View mWindow;
+        private final View mContents;
+
+        CustomInfoWindowAdapter() {
+            mWindow = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+            mContents = getLayoutInflater().inflate(R.layout.custom_info_contents, null);
+        }
+
+        @Override
+        public View getInfoWindow(Marker marker) {
+            render(marker, mWindow);
+            return mWindow;
+        }
+
+        @Override
+        public View getInfoContents(Marker marker) {
+            //render(marker, mWindow);
+            render(marker, mContents);
+            return mContents;
+        }
+
+        private void render(Marker marker, View view) {
+            int badge;
+            badge = R.mipmap.auto_verde_este;
+
+            ((ImageView) view.findViewById(R.id.badge)).setImageResource(badge);
+
+            String title = marker.getTitle();
+            TextView titleUi = ((TextView) view.findViewById(R.id.title));
+
+            if (title != null) {
+                SpannableString titleText = new SpannableString(title);
+                titleText.setSpan(new ForegroundColorSpan(Color.BLUE), 0, titleText.length(), 0);
+                titleUi.setText(titleText);
+            } else {
+                titleUi.setText("");
             }
-        }, 0, 20000);
+
+            String snippet = marker.getSnippet();
+            TextView snippetUi = ((TextView) view.findViewById(R.id.snippet));
+            if (snippet != null && snippet.length() > 12) {
+                SpannableString snippetText = new SpannableString(snippet);
+                //snippetText.setSpan(new ForegroundColorSpan(Color.BLACK), 0, 10, 0);
+                snippetText.setSpan(new ForegroundColorSpan(Color.BLACK), 0, snippet.length(), 0);
+                snippetUi.setText(snippetText);
+            } else {
+                snippetUi.setText("");
+            }
+        }
+
     }
+
+
+    public void onClearMap(View view) {
+        mMap.clear();
+    }
+
+    public void onResetMap(View view) {
+        mMap.clear();
+        Pintar();
+    }
+
 
 }
+
+//gm

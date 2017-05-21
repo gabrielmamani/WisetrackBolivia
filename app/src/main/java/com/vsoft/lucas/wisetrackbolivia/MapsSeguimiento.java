@@ -28,7 +28,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.vsoft.lucas.wisetrackbolivia.app.AppController;
@@ -40,6 +42,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -55,14 +62,60 @@ public class MapsSeguimiento extends FragmentActivity implements
     public String jsonResponse;
     private Marker mSelectedMarker;
 
-    private static int[] resource_image = {R.mipmap.auto_verde_este,
+    private static int[] resource_auto_verde = {
+            R.mipmap.auto_verde_este,
             R.mipmap.auto_verde_noreste,
             R.mipmap.auto_verde_noroeste,
             R.mipmap.auto_verde_norte,
             R.mipmap.auto_verde_oeste,
             R.mipmap.auto_verde_sur,
             R.mipmap.auto_verde_sureste,
-            R.mipmap.auto_verde_suroeste};
+            R.mipmap.auto_verde_suroeste
+    };
+
+    private static int[] resource_auto_amarillo = {
+            R.mipmap.auto_amarillo_este,
+            R.mipmap.auto_amarillo_noreste,
+            R.mipmap.auto_amarillo_noroeste,
+            R.mipmap.auto_amarillo_norte,
+            R.mipmap.auto_amarillo_oeste,
+            R.mipmap.auto_amarillo_sur,
+            R.mipmap.auto_amarillo_sureste,
+            R.mipmap.auto_amarillo_suroeste
+    };
+
+    private static int[] resource_auto_rojo = {
+            R.mipmap.auto_rojo_este,
+            R.mipmap.auto_rojo_noreste,
+            R.mipmap.auto_rojo_noroeste,
+            R.mipmap.auto_rojo_norte,
+            R.mipmap.auto_rojo_oeste,
+            R.mipmap.auto_rojo_sur,
+            R.mipmap.auto_rojo_sureste,
+            R.mipmap.auto_rojo_suroeste
+    };
+
+    private static int[] resource_auto_azul = {
+            R.mipmap.auto_azul_este,
+            R.mipmap.auto_azul_noreste,
+            R.mipmap.auto_azul_noroeste,
+            R.mipmap.auto_azul_norte,
+            R.mipmap.auto_azul_oeste,
+            R.mipmap.auto_azul_sur,
+            R.mipmap.auto_azul_sureste,
+            R.mipmap.auto_azul_suroeste
+    };
+
+    private static int[] resource_auto_celeste = {
+            R.mipmap.auto_celeste_este,
+            R.mipmap.auto_celeste_noreste,
+            R.mipmap.auto_celeste_noroeste,
+            R.mipmap.auto_celeste_norte,
+            R.mipmap.auto_celeste_oeste,
+            R.mipmap.auto_celeste_sur,
+            R.mipmap.auto_celeste_sureste,
+            R.mipmap.auto_celeste_suroeste
+    };
 
     private String tag_json_arry = "jarray_req";
     private ProgressDialog pDialog;
@@ -103,10 +156,10 @@ public class MapsSeguimiento extends FragmentActivity implements
         mMap.setOnInfoWindowCloseListener(this);
         mMap.setOnInfoWindowCloseListener(this);
 
-/*      LatLng latLng = new LatLng(-17.767066, -63.116432);
-        CameraUpdate cameraUpdateFactory = CameraUpdateFactory.newLatLngZoom(latLng, 20);
+        LatLng latLng = new LatLng(-17.128210, -64.714407);
+        CameraUpdate cameraUpdateFactory = CameraUpdateFactory.newLatLngZoom(latLng, 5);
         mMap.moveCamera(cameraUpdateFactory);
-*/
+
 
 
         //mMap.setMyLocationEnabled(true);
@@ -190,7 +243,26 @@ public class MapsSeguimiento extends FragmentActivity implements
 
                                                 String resultado = "FechaGPS: " + FechaGPS;
                                                 float rasimut = Float.parseFloat(asimut);
-                                                int nro = ObtenerEstadoMovil(rasimut);
+                                                int restadomotor = Integer.parseInt(EstadoMotor);
+
+                                                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                                                Date date = new Date();
+                                                try{
+                                                    date = format.parse(FechaGPS);
+                                                    Log.e("FechaGPS", date.toString());
+                                                }catch (ParseException e){
+                                                    e.printStackTrace();
+                                                }
+
+                                                int nro = ObtenerEstadoMovil(rasimut, restadomotor, date);
+
+                                                /*
+                                                mMap.addMarker(new MarkerOptions()
+                                                        .position(new LatLng(trama.getDouble("Latitud"), trama.getDouble("Longitud")))
+                                                        .title("Placa: " + NroPlaca)
+                                                        .snippet(resultado)
+                                                        .icon(BitmapDescriptorFactory.fromResource(nro)));
+                                                        */
 
                                                 if (NroPlaca.equals("4217-UBN")) {
                                                     mMap.addMarker(new MarkerOptions()
@@ -240,39 +312,83 @@ public class MapsSeguimiento extends FragmentActivity implements
                     }
                 });
             }
-        }, 0, 9000);
+        }, 0, 20000);
     }
 
-    public int ObtenerEstadoMovil(float result) {
+    public int ObtenerEstadoMovil(float result, int restadomotor, Date fechagps)
+    {
+        int resultfinal = 0;
         int valor = 0;
         if (result >= 338) {
-            valor = resource_image[3]; //norte
+            valor = 3; // resource_image_auto[3]; //norte
         }
         if(result <= 23){
-            valor = resource_image[3]; //norte
+            valor = 3; //resource_image_auto[3]; //norte
         }
         if(result > 23 && result < 68){
-            valor = resource_image[1]; //noreste
+            valor = 1; // resource_image_auto[1]; //noreste
         }
         if(result >= 68 && result < 113){
-            valor = resource_image[0]; //este
+            valor = 0; //resource_image_auto[0]; //este
         }
         if(result >= 113 && result < 158){
-            valor = resource_image[6]; //sureste
+            valor = 6; //resource_image_auto[6]; //sureste
         }
         if(result >= 158 && result < 203){
-            valor = resource_image[5]; //sur
+            valor = 5; //resource_image_auto[5]; //sur
         }
         if(result >= 203 && result < 248){
-            valor = resource_image[7]; //suroeste
+            valor = 7; //resource_image_auto[7]; //suroeste
         }
         if(result >= 248 && result < 293){
-            valor = resource_image[4]; //oeste
+            valor =4; // resource_image_auto[4]; //oeste
         }
         if(result >= 293 && result < 338){
-            valor = resource_image[2]; //noroeste
+            valor = 2; //resource_image_auto[2]; //noroeste
         }
-        return valor;
+
+        Date newDate = new Date();
+        long diff = newDate.getTime() - fechagps.getTime();
+        //long minutos = (diff/(1000*60))%60;
+        long minutos = (diff/(1000*60));
+        if(minutos >= 60){
+            resultfinal = resource_auto_rojo[valor];
+        }
+        if(minutos >= 30 && minutos < 60){
+            resultfinal= resource_auto_amarillo[valor];
+        }
+        if(minutos < 30){
+            switch (restadomotor){
+                case 11:
+                    resultfinal = resource_auto_azul[valor];
+                    break;
+                case 12:
+                    resultfinal = resource_auto_celeste[valor];
+                    break;
+                case 21:
+                    resultfinal = resource_auto_verde[valor];
+                    break;
+                case 22:
+                    resultfinal = resource_auto_verde[valor];
+                    break;
+                case 41:
+                    resultfinal = resource_auto_azul[valor];
+                    break;
+                case 42:
+                    resultfinal = resource_auto_celeste[valor];
+                    break;
+                case 1:
+                    resultfinal = resource_auto_verde[valor];
+                    break;
+                case 0:
+                    resultfinal = resource_auto_azul[valor];
+                    break;
+                default:
+                    resultfinal = resource_auto_verde[valor];
+                    break;
+            }
+        }
+        return resultfinal;
     }
 
     @Override
@@ -345,16 +461,16 @@ public class MapsSeguimiento extends FragmentActivity implements
 
     }
 
-
+/*
     public void onClearMap(View view) {
         mMap.clear();
     }
 
     public void onResetMap(View view) {
         mMap.clear();
-        Pintar();
+        //Pintar();
     }
-
+*/
 
 }
 

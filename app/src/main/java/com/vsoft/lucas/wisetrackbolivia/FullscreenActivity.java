@@ -82,8 +82,9 @@ public class FullscreenActivity extends AppCompatActivity {
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
                 //Toast toast = Toast.makeText(getApplicationContext(),"Bienvenido", Toast.LENGTH_SHORT);
                 //toast.show();
-                Intent intent = new Intent(getApplicationContext(), MapsSeguimiento.class);
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                 startActivity(intent);
+                finish();
             }
             return false;
         }
